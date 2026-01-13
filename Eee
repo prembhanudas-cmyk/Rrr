@@ -1,0 +1,99 @@
+-- Create Database
+CREATE DATABASE EmployeeDB;
+USE EmployeeDB;
+
+-- Employee Table
+CREATE TABLE Employee (
+    SSN CHAR(9) PRIMARY KEY,
+    Name VARCHAR(50),
+    Address VARCHAR(100),
+    Salary DECIMAL(10,2),
+    Sex CHAR(1),
+    BirthDate DATE,
+    DeptNo INT,
+    SupervisorSSN CHAR(9)
+);
+
+-- Department Table
+CREATE TABLE Department (
+    DeptNo INT PRIMARY KEY,
+    DeptName VARCHAR(50) UNIQUE,
+    ManagerSSN CHAR(9),
+    ManagerStartDate DATE,
+    FOREIGN KEY (ManagerSSN) REFERENCES Employee(SSN)
+);
+
+-- Department Locations (Multi-valued Attribute)
+CREATE TABLE Dept_Locations (
+    DeptNo INT,
+    Location VARCHAR(50),
+    PRIMARY KEY (DeptNo, Location),
+    FOREIGN KEY (DeptNo) REFERENCES Department(DeptNo)
+);
+
+-- Project Table
+CREATE TABLE Project (
+    ProjectNo INT PRIMARY KEY,
+    ProjectName VARCHAR(50) UNIQUE,
+    Location VARCHAR(50),
+    DeptNo INT,
+    FOREIGN KEY (DeptNo) REFERENCES Department(DeptNo)
+);
+
+-- Works_On Table (Many-to-Many)
+CREATE TABLE Works_On (
+    SSN CHAR(9),
+    ProjectNo INT,
+    HoursPerWeek INT,
+    PRIMARY KEY (SSN, ProjectNo),
+    FOREIGN KEY (SSN) REFERENCES Employee(SSN),
+    FOREIGN KEY (ProjectNo) REFERENCES Project(ProjectNo)
+);
+
+-- Dependent Table
+CREATE TABLE Dependent (
+    DependentID INT AUTO_INCREMENT PRIMARY KEY,
+    EmployeeSSN CHAR(9),
+    DependentName VARCHAR(50),
+    Sex CHAR(1),
+    BirthDate DATE,
+    Relationship VARCHAR(30),
+    FOREIGN KEY (EmployeeSSN) REFERENCES Employee(SSN)
+);
+
+-- Insert Employee Records
+INSERT INTO Employee VALUES
+('111223333','Rahul Sharma','Bangalore',60000,'M','1990-05-10',1,NULL),
+('222334444','Anita Verma','Mysore',50000,'F','1992-08-15',2,'111223333'),
+('333445555','Amit Kumar','Delhi',45000,'M','1995-01-20',1,'111223333');
+
+-- Insert Department Records
+INSERT INTO Department VALUES
+(1,'IT','111223333','2018-01-01'),
+(2,'HR','222334444','2019-03-10');
+
+-- Insert Department Locations
+INSERT INTO Dept_Locations VALUES
+(1,'Bangalore'),
+(1,'Hyderabad'),
+(2,'Mysore');
+
+-- Insert Project Records
+INSERT INTO Project VALUES
+(101,'Payroll System','Bangalore',1),
+(102,'Recruitment Portal','Mysore',2),
+(103,'Cloud Migration','Hyderabad',1);
+
+-- Insert Works_On Records
+INSERT INTO Works_On VALUES
+('111223333',101,20),
+('111223333',103,15),
+('222334444',102,25),
+('333445555',101,30);
+
+-- Insert Dependent Records
+INSERT INTO Dependent
+(EmployeeSSN, DependentName, Sex, BirthDate, Relationship)
+VALUES
+('111223333','Riya','F','2015-04-10','Daughter'),
+('222334444','Raj','M','2018-09-25','Son');
