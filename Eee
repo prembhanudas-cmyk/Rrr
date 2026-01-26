@@ -63,14 +63,14 @@ CREATE TABLE Dependent (
 
 -- Insert Employee Records
 INSERT INTO Employee VALUES
-('111223333','Rahul Sharma','Bangalore',60000,'M','1990-05-10',1,NULL),
-('222334444','Anita Verma','Mysore',50000,'F','1992-08-15',2,'111223333'),
-('333445555','Amit Kumar','Delhi',45000,'M','1995-01-20',1,'111223333');
+('EMP1','Rahul Sharma','Bangalore',60000,'M','1990-05-10',1,11121),
+('EMP2','Anita Verma','Mysore',50000,'F','1992-08-15',2,'11122'),
+('EMP3','Amit Kumar','Delhi',45000,'M','1995-01-20',1,'11123');
 
 -- Insert Department Records
 INSERT INTO Department VALUES
-(1,'IT','111223333','2018-01-01'),
-(2,'HR','222334444','2019-03-10');
+(1,'IT','MNG111','2018-01-01'),
+(2,'HR','MNG112','2019-03-10');
 
 -- Insert Department Locations
 INSERT INTO Dept_Locations VALUES
@@ -86,14 +86,32 @@ INSERT INTO Project VALUES
 
 -- Insert Works_On Records
 INSERT INTO Works_On VALUES
-('111223333',101,20),
-('111223333',103,15),
-('222334444',102,25),
-('333445555',101,30);
+('EMP1',101,20),
+('EMP1',103,15),
+('EMP2',102,25),
+('EMP3',101,30);
 
 -- Insert Dependent Records
 INSERT INTO Dependent
 (EmployeeSSN, DependentName, Sex, BirthDate, Relationship)
 VALUES
-('111223333','Riya','F','2015-04-10','Daughter'),
-('222334444','Raj','M','2018-09-25','Son');
+('EMP1','Riya','F','2015-04-10','Daughter'),
+('EMP2','Raj','M','2018-09-25','Son');
+
++++++++++++++++++Query++++++++++++++++++
+SELECT DISTINCT 
+    e.SSN,
+    d.DeptNo,
+    p.ProjectNo,
+    p.Location
+FROM Employee e
+JOIN Works_On w ON e.SSN = w.SSN
+JOIN Project p ON w.ProjectNo = p.ProjectNo
+JOIN Department d ON p.DeptNo = d.DeptNo
+WHERE e.SSN IN (
+    SELECT w2.SSN
+    FROM Works_On w2
+    JOIN Project p2 ON w2.ProjectNo = p2.ProjectNo
+    GROUP BY w2.SSN
+    HAVING COUNT(DISTINCT p2.Location) > 1
+);
