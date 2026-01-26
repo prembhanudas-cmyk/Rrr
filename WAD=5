@@ -1,0 +1,129 @@
+/* ================================
+   DATABASE CREATION
+   ================================ */
+CREATE DATABASE SolarDB;
+USE SolarDB;
+
+/* ================================
+   TABLE CREATION
+   ================================ */
+
+CREATE TABLE Distributor (
+    TIN VARCHAR(10) PRIMARY KEY,
+    Name VARCHAR(50),
+    Address VARCHAR(100),
+    Contact VARCHAR(15)
+);
+
+CREATE TABLE Place (
+    PlaceID INT PRIMARY KEY,
+    PlaceName VARCHAR(50),
+    Area VARCHAR(50),
+    PlaceType VARCHAR(15)
+);
+
+CREATE TABLE Panel (
+    PVModuleID VARCHAR(10) PRIMARY KEY,
+    PanelType VARCHAR(20),
+    WarrantyYears INT,
+    Cost INT
+);
+
+CREATE TABLE Installation (
+    InstallID INT PRIMARY KEY,
+    PVModuleID VARCHAR(10),
+    TIN VARCHAR(10),
+    PlaceID INT,
+    CapacityKW INT,
+    InstallDate DATE,
+    FOREIGN KEY (PVModuleID) REFERENCES Panel(PVModuleID),
+    FOREIGN KEY (TIN) REFERENCES Distributor(TIN),
+    FOREIGN KEY (PlaceID) REFERENCES Place(PlaceID)
+);
+
+/* ================================
+   DATA INSERTION (6 RECORDS EACH)
+   ================================ */
+
+INSERT INTO Distributor VALUES
+('TIN101','SunPower Ltd','Mumbai','9000011111'),
+('TIN102','GreenVolt','Pune','9000022222'),
+('TIN103','EcoSolar','Delhi','9000033333'),
+('TIN104','SolarOne','Bangalore','9000044444'),
+('TIN105','BrightSun','Chennai','9000055555'),
+('TIN106','RenewGen','Hyderabad','9000066666');
+
+INSERT INTO Place VALUES
+(1,'House-11','Andheri','Domestic'),
+(2,'House-22','Borivali','Domestic'),
+(3,'Flat-33','Andheri','Domestic'),
+(4,'ABC Office','Andheri','Commercial'),
+(5,'XYZ Hotel','Delhi NCR','Commercial'),
+(6,'City Mall','Bangalore','Commercial');
+
+INSERT INTO Panel VALUES
+('PV01','Monocrystalline',15,40000),
+('PV02','Polycrystalline',25,60000),
+('PV03','Monocrystalline',15,40000),
+('PV04','Polycrystalline',25,60000),
+('PV05','Monocrystalline',15,40000),
+('PV06','Polycrystalline',25,60000);
+
+INSERT INTO Installation VALUES
+(1,'PV01','TIN101',1,5,'2014-02-10'),
+(2,'PV02','TIN101',2,7,'2015-06-15'),
+(3,'PV03','TIN102',3,6,'2016-09-20'),
+(4,'PV04','TIN103',4,15,'2013-01-05'),
+(5,'PV05','TIN101',4,12,'2017-11-25'),
+(6,'PV06','TIN104',5,20,'2018-03-30');
+
+/* ================================
+   QUERIES
+   ================================ */
+
+-- 1. Distributor with most domestic installations
+SELECT d.Name, COUNT(*) AS TotalInstallations
+FROM Distributor d
+JOIN Installation i ON d.TIN = i.TIN
+JOIN Place p ON i.PlaceID = p.PlaceID
+WHERE p.PlaceType = 'Domestic'
+GROUP BY d.Name
+ORDER BY TotalInstallations DESC
+LIMIT 1;
+
+-- 2. Place with highest capacity panel installed
+SELECT p.PlaceName, i.CapacityKW
+FROM Installation i
+JOIN Place p ON i.PlaceID = p.PlaceID
+ORDER BY i.CapacityKW DESC
+LIMIT 1;
+
+-- 3. Areas where monocrystalline panels are installed
+SELECT DISTINCT p.Area
+FROM Installation i
+JOIN Panel pa ON i.PVModuleID = pa.PVModuleID
+JOIN Place p ON i.PlaceID = p.PlaceID
+WHERE pa.PanelType = 'Monocrystalline';
+
+-- 4. Total installation charges (by panel type) for Andheri area
+SELECT pa.PanelType, SUM(pa.Cost) AS TotalInstallationCost
+FROM Installation i
+JOIN Panel pa ON i.PVModuleID = pa.PVModuleID
+JOIN Place p ON i.PlaceID = p.PlaceID
+WHERE p.Area = 'Andheri'
+GROUP BY pa.PanelType;
+
+-- 5. Distributor and panel details of oldest installation
+SELECT d.Name, pa.PanelType, i.InstallDate
+FROM Installation i
+JOIN Distributor d ON i.TIN = d.TIN
+JOIN Panel pa ON i.PVModuleID = pa.PVModuleID
+WHERE i.InstallDate = (SELECT MIN(InstallDate) FROM Installation);
+
+-- 6. Average sales of both panel types in commercial places
+SELECT pa.PanelType, AVG(pa.Cost) AS AverageSales
+FROM Installation i
+JOIN Panel pa ON i.PVModuleID = pa.PVModuleID
+JOIN Place p ON i.PlaceID = p.PlaceID
+WHERE p.PlaceType = 'Commercial'
+GROUP BY pa.PanelType;
