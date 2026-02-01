@@ -1,129 +1,166 @@
-/* ================================
-   DATABASE CREATION
-   ================================ */
+ -- ==============================
+-- DATABASE CREATION
+-- ==============================
 CREATE DATABASE SolarDB;
 USE SolarDB;
 
-/* ================================
-   TABLE CREATION
-   ================================ */
+-- ==============================
+-- TABLE CREATION
+-- ==============================
 
-CREATE TABLE Distributor (
-    TIN VARCHAR(10) PRIMARY KEY,
-    Name VARCHAR(50),
-    Address VARCHAR(100),
-    Contact VARCHAR(15)
+CREATE TABLE Solar_Panel(
+    pv_module INT PRIMARY KEY,
+    pv_type VARCHAR(30),
+    capacity INT,
+    price INT,
+    warranty INT
 );
 
-CREATE TABLE Place (
-    PlaceID INT PRIMARY KEY,
-    PlaceName VARCHAR(50),
-    Area VARCHAR(50),
-    PlaceType VARCHAR(15)
+CREATE TABLE Distributor(
+    tin INT PRIMARY KEY,
+    name VARCHAR(50),
+    contact_details VARCHAR(20),
+    address VARCHAR(100)
 );
 
-CREATE TABLE Panel (
-    PVModuleID VARCHAR(10) PRIMARY KEY,
-    PanelType VARCHAR(20),
-    WarrantyYears INT,
-    Cost INT
+CREATE TABLE Users(
+    place_id INT PRIMARY KEY,
+    name VARCHAR(50),
+    area VARCHAR(50)
 );
 
-CREATE TABLE Installation (
-    InstallID INT PRIMARY KEY,
-    PVModuleID VARCHAR(10),
-    TIN VARCHAR(10),
-    PlaceID INT,
-    CapacityKW INT,
-    InstallDate DATE,
-    FOREIGN KEY (PVModuleID) REFERENCES Panel(PVModuleID),
-    FOREIGN KEY (TIN) REFERENCES Distributor(TIN),
-    FOREIGN KEY (PlaceID) REFERENCES Place(PlaceID)
+CREATE TABLE Sold_By(
+    pv_module INT,
+    tin INT,
+    PRIMARY KEY(pv_module, tin),
+    FOREIGN KEY(pv_module) REFERENCES Solar_Panel(pv_module),
+    FOREIGN KEY(tin) REFERENCES Distributor(tin)
 );
 
-/* ================================
-   DATA INSERTION (6 RECORDS EACH)
-   ================================ */
+CREATE TABLE Purchased_By(
+    pv_module INT,
+    place_id INT,
+    PRIMARY KEY(pv_module, place_id),
+    FOREIGN KEY(pv_module) REFERENCES Solar_Panel(pv_module),
+    FOREIGN KEY(place_id) REFERENCES Users(place_id)
+);
+
+CREATE TABLE Installation(
+    pv_module INT,
+    place_id INT,
+    tin INT,
+    date DATE,
+    type VARCHAR(30),
+    installation_charge INT,
+    PRIMARY KEY(pv_module, place_id, tin),
+    FOREIGN KEY(pv_module) REFERENCES Solar_Panel(pv_module),
+    FOREIGN KEY(place_id) REFERENCES Users(place_id),
+    FOREIGN KEY(tin) REFERENCES Distributor(tin)
+);
+
+-- ==============================
+-- INSERT DATA
+-- ==============================
+
+INSERT INTO Solar_Panel VALUES
+(1, 'Monocrystalline', 5, 40000, 15),
+(2, 'Polycrystalline', 8, 60000, 25),
+(3, 'Monocrystalline', 10, 40000, 15),
+(4, 'Polycrystalline', 12, 60000, 25),
+(5, 'Monocrystalline', 15, 85000, 20),
+(6, 'Polycrystalline', 20, 120000, 30);
 
 INSERT INTO Distributor VALUES
-('TIN101','SunPower Ltd','Mumbai','9000011111'),
-('TIN102','GreenVolt','Pune','9000022222'),
-('TIN103','EcoSolar','Delhi','9000033333'),
-('TIN104','SolarOne','Bangalore','9000044444'),
-('TIN105','BrightSun','Chennai','9000055555'),
-('TIN106','RenewGen','Hyderabad','9000066666');
+(101, 'SunPower', '9876543210', 'Bangalore'),
+(102, 'GreenSolar', '9988776655', 'Mysore'),
+(103, 'EcoEnergy', '9123456780', 'Delhi'),
+(104, 'SolarMax', '9012345678', 'Chennai'),
+(105, 'BrightEnergy', '9090909090', 'Hyderabad'),
+(106, 'FutureSolar', '9001122334', 'Pune');
 
-INSERT INTO Place VALUES
-(1,'House-11','Andheri','Domestic'),
-(2,'House-22','Borivali','Domestic'),
-(3,'Flat-33','Andheri','Domestic'),
-(4,'ABC Office','Andheri','Commercial'),
-(5,'XYZ Hotel','Delhi NCR','Commercial'),
-(6,'City Mall','Bangalore','Commercial');
+INSERT INTO Users VALUES
+(1, 'Prabha House', 'Bangalore'),
+(2, 'Ravi Home', 'Mysore'),
+(3, 'Tech Office', 'Delhi'),
+(4, 'Hotel Sunshine', 'Bangalore'),
+(5, 'Mall Plaza', 'Chennai'),
+(6, 'City Hospital', 'Hyderabad');
 
-INSERT INTO Panel VALUES
-('PV01','Monocrystalline',15,40000),
-('PV02','Polycrystalline',25,60000),
-('PV03','Monocrystalline',15,40000),
-('PV04','Polycrystalline',25,60000),
-('PV05','Monocrystalline',15,40000),
-('PV06','Polycrystalline',25,60000);
+INSERT INTO Sold_By VALUES
+(1, 101),
+(2, 101),
+(3, 102),
+(4, 103),
+(5, 104),
+(6, 105);
+
+INSERT INTO Purchased_By VALUES
+(1, 1),
+(2, 2),
+(3, 3),
+(4, 4),
+(5, 5),
+(6, 6);
 
 INSERT INTO Installation VALUES
-(1,'PV01','TIN101',1,5,'2014-02-10'),
-(2,'PV02','TIN101',2,7,'2015-06-15'),
-(3,'PV03','TIN102',3,6,'2016-09-20'),
-(4,'PV04','TIN103',4,15,'2013-01-05'),
-(5,'PV05','TIN101',4,12,'2017-11-25'),
-(6,'PV06','TIN104',5,20,'2018-03-30');
+(1, 1, 101, '2018-05-10', 'Domestic', 40000),
+(2, 2, 101, '2020-06-15', 'Domestic', 60000),
+(3, 3, 102, '2021-08-18', 'Commercial', 40000),
+(4, 4, 103, '2017-01-25', 'Commercial', 60000),
+(1, 4, 101, '2016-03-12', 'Commercial', 40000),
+(5, 5, 104, '2019-11-20', 'Commercial', 85000),
+(6, 6, 105, '2022-04-05', 'Domestic', 120000);
 
-/* ================================
-   QUERIES
-   ================================ */
+-- ==============================
+-- QUERIES
+-- ==============================
 
--- 1. Distributor with most domestic installations
-SELECT d.Name, COUNT(*) AS TotalInstallations
-FROM Distributor d
-JOIN Installation i ON d.TIN = i.TIN
-JOIN Place p ON i.PlaceID = p.PlaceID
-WHERE p.PlaceType = 'Domestic'
-GROUP BY d.Name
-ORDER BY TotalInstallations DESC
+-- 1. Distributor with highest domestic installations
+SELECT d.tin, d.name, COUNT(*) AS total_installations
+FROM Installation i
+JOIN Distributor d ON i.tin = d.tin
+WHERE i.type = 'Domestic'
+GROUP BY d.tin, d.name
+ORDER BY total_installations DESC
 LIMIT 1;
 
--- 2. Place with highest capacity panel installed
-SELECT p.PlaceName, i.CapacityKW
+-- 2. Place with highest capacity installed
+SELECT u.name AS place_name, MAX(sp.capacity) AS highest_capacity
 FROM Installation i
-JOIN Place p ON i.PlaceID = p.PlaceID
-ORDER BY i.CapacityKW DESC
+JOIN Users u ON i.place_id = u.place_id
+JOIN Solar_Panel sp ON i.pv_module = sp.pv_module
+GROUP BY u.place_id, u.name
+ORDER BY highest_capacity DESC
 LIMIT 1;
 
--- 3. Areas where monocrystalline panels are installed
-SELECT DISTINCT p.Area
+-- 3. Areas using Monocrystalline panels
+SELECT DISTINCT u.area
 FROM Installation i
-JOIN Panel pa ON i.PVModuleID = pa.PVModuleID
-JOIN Place p ON i.PlaceID = p.PlaceID
-WHERE pa.PanelType = 'Monocrystalline';
+JOIN Users u ON i.place_id = u.place_id
+JOIN Solar_Panel sp ON i.pv_module = sp.pv_module
+WHERE sp.pv_type = 'Monocrystalline';
 
--- 4. Total installation charges (by panel type) for Andheri area
-SELECT pa.PanelType, SUM(pa.Cost) AS TotalInstallationCost
+-- 4. Total installation charge by panel type in Bangalore
+SELECT sp.pv_type, SUM(i.installation_charge) AS total_charge
 FROM Installation i
-JOIN Panel pa ON i.PVModuleID = pa.PVModuleID
-JOIN Place p ON i.PlaceID = p.PlaceID
-WHERE p.Area = 'Andheri'
-GROUP BY pa.PanelType;
+JOIN Users u ON i.place_id = u.place_id
+JOIN Solar_Panel sp ON i.pv_module = sp.pv_module
+WHERE u.area = 'Bangalore'
+GROUP BY sp.pv_type;
 
--- 5. Distributor and panel details of oldest installation
-SELECT d.Name, pa.PanelType, i.InstallDate
+-- 5. Oldest installation details
+SELECT d.tin, d.name AS distributor_name,
+       sp.pv_module, sp.pv_type,
+       i.date AS installation_date
 FROM Installation i
-JOIN Distributor d ON i.TIN = d.TIN
-JOIN Panel pa ON i.PVModuleID = pa.PVModuleID
-WHERE i.InstallDate = (SELECT MIN(InstallDate) FROM Installation);
+JOIN Distributor d ON i.tin = d.tin
+JOIN Solar_Panel sp ON i.pv_module = sp.pv_module
+ORDER BY i.date ASC
+LIMIT 1;
 
--- 6. Average sales of both panel types in commercial places
-SELECT pa.PanelType, AVG(pa.Cost) AS AverageSales
+-- 6. Average commercial installation charge by panel type
+SELECT sp.pv_type, AVG(i.installation_charge) AS avg_sales
 FROM Installation i
-JOIN Panel pa ON i.PVModuleID = pa.PVModuleID
-JOIN Place p ON i.PlaceID = p.PlaceID
-WHERE p.PlaceType = 'Commercial'
-GROUP BY pa.PanelType;
+JOIN Solar_Panel sp ON i.pv_module = sp.pv_module
+WHERE i.type = 'Commercial'
+GROUP BY sp.pv_type;
