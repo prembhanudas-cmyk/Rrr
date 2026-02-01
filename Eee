@@ -1,109 +1,200 @@
--- Create Database
+-- =========================================
+-- DROP & CREATE DATABASE
+-- =========================================
+DROP DATABASE IF EXISTS EmployeeDB;
 CREATE DATABASE EmployeeDB;
 USE EmployeeDB;
 
--- Employee Table
+-- =========================================
+-- EMPLOYEE TABLE
+-- =========================================
 CREATE TABLE Employee (
-    SSN CHAR(9) PRIMARY KEY,
-    Name VARCHAR(50),
+    SSN CHAR(5) PRIMARY KEY,
+    FName VARCHAR(30),
+    LName VARCHAR(30),
     Address VARCHAR(100),
     Salary DECIMAL(10,2),
     Sex CHAR(1),
     BirthDate DATE,
     DeptNo INT,
-    SupervisorSSN CHAR(9)
+    SupervisorSSN CHAR(5)
 );
 
--- Department Table
+-- =========================================
+-- DEPARTMENT TABLE
+-- =========================================
 CREATE TABLE Department (
     DeptNo INT PRIMARY KEY,
     DeptName VARCHAR(50) UNIQUE,
-    ManagerSSN CHAR(9),
-    ManagerStartDate DATE,
+    ManagerSSN CHAR(5),
     FOREIGN KEY (ManagerSSN) REFERENCES Employee(SSN)
 );
 
--- Department Locations (Multi-valued Attribute)
-CREATE TABLE Dept_Locations (
-    DeptNo INT,
-    Location VARCHAR(50),
-    PRIMARY KEY (DeptNo, Location),
-    FOREIGN KEY (DeptNo) REFERENCES Department(DeptNo)
-);
-
--- Project Table
+-- =========================================
+-- PROJECT TABLE (MODIFIED)
+-- =========================================
 CREATE TABLE Project (
     ProjectNo INT PRIMARY KEY,
-    ProjectName VARCHAR(50) UNIQUE,
-    Location VARCHAR(50),
+    ProjectTitle VARCHAR(50),
     DeptNo INT,
+    City VARCHAR(50),
+    ProjectAmount DECIMAL(12,2),
+    CompletionDate DATE,
     FOREIGN KEY (DeptNo) REFERENCES Department(DeptNo)
 );
 
--- Works_On Table (Many-to-Many)
+-- =========================================
+-- WORKS_ON TABLE
+-- =========================================
 CREATE TABLE Works_On (
-    SSN CHAR(9),
+    SSN CHAR(5),
     ProjectNo INT,
-    HoursPerWeek INT,
+    Hours INT,
     PRIMARY KEY (SSN, ProjectNo),
     FOREIGN KEY (SSN) REFERENCES Employee(SSN),
     FOREIGN KEY (ProjectNo) REFERENCES Project(ProjectNo)
 );
 
--- Dependent Table
+-- =========================================
+-- DEPENDENT TABLE
+-- =========================================
 CREATE TABLE Dependent (
     DependentID INT AUTO_INCREMENT PRIMARY KEY,
-    EmployeeSSN CHAR(9),
+    EmployeeSSN CHAR(5),
     DependentName VARCHAR(50),
-    Sex CHAR(1),
-    BirthDate DATE,
     Relationship VARCHAR(30),
     FOREIGN KEY (EmployeeSSN) REFERENCES Employee(SSN)
 );
 
--- Insert Employee Records
+-- =========================================
+-- INSERT EMPLOYEE DATA
+-- =========================================
 INSERT INTO Employee VALUES
-('EMP1','Rahul Sharma','Bangalore',60000,'M','1990-05-10',1,11121),
-('EMP2','Anita Verma','Mysore',50000,'F','1992-08-15',2,'11122'),
-('EMP3','Amit Kumar','Delhi',45000,'M','1995-01-20',1,'11123');
+('E001','Rahul','Sharma','Bangalore',60000,'M','1990-05-10',1,NULL),
+('E002','Anita','Verma','Mysore',50000,'F','1992-08-15',2,'E001'),
+('E003','Amit','Kumar','Delhi',55000,'M','1991-01-20',5,'E001'),
+('E004','Sneha','Iyer','Chennai',45000,'F','1993-07-11',3,'E003'),
+('E005','Vikram','Singh','Hyderabad',65000,'M','1989-03-30',4,'E003'),
+('E006','Suresh','Rao','Pune',48000,'M','1991-04-12',5,'E003'),
+('E007','Meena','Das','Kolkata',47000,'F','1994-09-21',5,'E003');
 
--- Insert Department Records
+-- =========================================
+-- INSERT DEPARTMENT DATA
+-- =========================================
 INSERT INTO Department VALUES
-(1,'IT','MNG111','2018-01-01'),
-(2,'HR','MNG112','2019-03-10');
+(1,'IT','E001'),
+(2,'HR','E002'),
+(3,'Finance','E004'),
+(4,'Marketing','E005'),
+(5,'R&D','E003');
 
--- Insert Department Locations
-INSERT INTO Dept_Locations VALUES
-(1,'Bangalore'),
-(1,'Hyderabad'),
-(2,'Mysore');
-
--- Insert Project Records
+-- =========================================
+-- INSERT PROJECT DATA
+-- =========================================
 INSERT INTO Project VALUES
-(101,'Payroll System','Bangalore',1),
-(102,'Recruitment Portal','Mysore',2),
-(103,'Cloud Migration','Hyderabad',1);
+(101,'Payroll System',1,'Bangalore',300000,'2023-05-10'),
+(102,'Recruitment Portal',2,'Mysore',200000,'2023-06-15'),
+(103,'Cloud Migration',1,'Hyderabad',400000,'2024-01-10'),
+(104,'Budget Analysis',3,'Chennai',350000,'2023-12-01'),
+(105,'Market Research',4,'Delhi',250000,'2023-11-20'),
+(106,'AI Research',5,'Bangalore',400000,'2024-02-10'),
+(107,'ML Platform',5,'Hyderabad',300000,'2024-03-15'),
+(108,'Data Lab',5,'Pune',300000,'2024-04-01');
 
--- Insert Works_On Records
+-- =========================================
+-- INSERT WORKS_ON DATA
+-- =========================================
 INSERT INTO Works_On VALUES
-('EMP1',101,20),
-('EMP1',103,15),
-('EMP2',102,25),
-('EMP3',101,30);
+('E001',101,20),
+('E001',103,15),
+('E003',106,20),
+('E003',107,20),
+('E003',108,15),
+('E006',106,18),
+('E006',107,20),
+('E006',108,22),
+('E007',106,16),
+('E007',107,18),
+('E007',108,20);
 
--- Insert Dependent Records
-INSERT INTO Dependent
-(EmployeeSSN, DependentName, Sex, BirthDate, Relationship)
-VALUES
-('EMP1','Riya','F','2015-04-10','Daughter'),
-('EMP2','Raj','M','2018-09-25','Son');
+-- =========================================
+-- INSERT DEPENDENT DATA
+-- =========================================
+INSERT INTO Dependent (EmployeeSSN, DependentName, Relationship) VALUES
+('E003','Neha','Daughter'),
+('E006','Rohan','Son'),
+('E007','Anaya','Daughter');
 
-+++++++++++++++++Query++++++++++++++++++
-SELECT DISTINCT 
-    e.SSN,
-    d.DeptNo,
-    p.ProjectNo,
-    p.Location
+-- =========================================
+-- QUERY 1
+-- Salary > Average salary of Finance department
+-- =========================================
+SELECT FName, LName, DeptName, Salary
+FROM Employee e
+JOIN Department d ON e.DeptNo = d.DeptNo
+WHERE Salary >
+(
+    SELECT AVG(Salary)
+    FROM Employee e2
+    JOIN Department d2 ON e2.DeptNo = d2.DeptNo
+    WHERE d2.DeptName = 'Finance'
+);
+
+-- =========================================
+-- QUERY 2
+-- Employees working on more than 2 R&D projects
+-- =========================================
+SELECT FName, LName, DeptName, COUNT(*) AS Number_of_Projects
+FROM Employee e
+JOIN Works_On w ON e.SSN = w.SSN
+JOIN Project p ON w.ProjectNo = p.ProjectNo
+JOIN Department d ON p.DeptNo = d.DeptNo
+WHERE d.DeptName = 'R&D'
+GROUP BY e.SSN
+HAVING COUNT(*) > 2;
+
+-- =========================================
+-- QUERY 3
+-- All ongoing projects controlled by departments
+-- =========================================
+SELECT ProjectNo, ProjectTitle, DeptName, CompletionDate
+FROM Project p
+JOIN Department d ON p.DeptNo = d.DeptNo;
+
+-- =========================================
+-- QUERY 4
+-- Supervisors supervising more than 3 employees
+-- =========================================
+SELECT s.SSN AS Supervisor_id, s.FName AS Supervisor_name
+FROM Employee s
+JOIN Employee e ON e.SupervisorSSN = s.SSN
+JOIN Works_On w ON e.SSN = w.SSN
+GROUP BY s.SSN
+HAVING COUNT(DISTINCT e.SSN) > 3;
+
+-- =========================================
+-- QUERY 5
+-- Dependents of employees whose project worth >= 10L
+-- =========================================
+SELECT e.SSN AS Employee_id,
+       CONCAT(e.FName,' ',e.LName) AS Employee_name,
+       SUM(p.ProjectAmount) AS Project_Amount,
+       d.DependentName
+FROM Employee e
+JOIN Works_On w ON e.SSN = w.SSN
+JOIN Project p ON w.ProjectNo = p.ProjectNo
+JOIN Dependent d ON e.SSN = d.EmployeeSSN
+GROUP BY e.SSN, d.DependentName
+HAVING SUM(p.ProjectAmount) >= 1000000;
+
+-- =========================================
+-- QUERY 6
+-- Employees whose projects are in more than one city
+-- =========================================
+SELECT DISTINCT e.SSN AS Employee_id,
+       d.DeptNo AS Department_id,
+       p.ProjectNo AS Project_id,
+       p.City
 FROM Employee e
 JOIN Works_On w ON e.SSN = w.SSN
 JOIN Project p ON w.ProjectNo = p.ProjectNo
@@ -113,5 +204,5 @@ WHERE e.SSN IN (
     FROM Works_On w2
     JOIN Project p2 ON w2.ProjectNo = p2.ProjectNo
     GROUP BY w2.SSN
-    HAVING COUNT(DISTINCT p2.Location) > 1
+    HAVING COUNT(DISTINCT p2.City) > 1
 );
